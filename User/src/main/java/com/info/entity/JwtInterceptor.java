@@ -23,7 +23,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                              Object handler)
             throws Exception {
         String header = request.getHeader("Authorization");
-        if (header != null || !header.startsWith("Bearer ")) {
+        if (header == null || !header.startsWith("Bearer ")) {
            writeError(response,401, "未登录");
            return false;
         }

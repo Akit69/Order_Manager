@@ -6,7 +6,6 @@ import com.info.entity.Result;
 import com.info.entity.VO.ProductVO;
 import com.info.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -16,21 +15,20 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
     private final ProductService productService;
 
-
     @GetMapping("/list")
-    public Result<PageResult<ProductVO>> list( @RequestParam(defaultValue = "1") Integer page,
-                                               @RequestParam(defaultValue = "10") Integer size,
-                                               @RequestParam(required = false) String keyword,
-                                               @RequestParam(required = false) Long categoryId,
-                                               @RequestParam(required = false) Integer status,
-                                               @RequestParam(required = false) Long minPrice,
-                                               @RequestParam(required = false) Long maxPrice) {
-        PageResult<ProductVO> pageResult = productService.getProductPage(page, size, keyword, categoryId, status, minPrice, maxPrice);
+    public Result<PageResult<ProductVO>> list(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Long minPrice,
+            @RequestParam(required = false) Long maxPrice) {
+        PageResult<ProductVO> pageResult = productService.getProductPage(
+                page, size, keyword, categoryId, status, minPrice, maxPrice);
         return Result.success(pageResult);
-
     }
 
     @GetMapping("/detail/{id}")
@@ -54,7 +52,6 @@ public class ProductController {
     @PutMapping("/{id}/status")
     public Result<String> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         productService.updateStatus(id, status);
-        return Result.success("修改成功", null);
+        return Result.success("状态已更新", null);
     }
-
 }

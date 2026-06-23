@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-
     private final ProductMapper productMapper;
     private final CategoryMapper categoryMapper;
 
@@ -49,10 +48,8 @@ public class ProductServiceImpl implements ProductService {
         }
         wrapper.orderByDesc(Product::getSales);
 
-        // ② 分页查商品
         IPage<Product> productPage = productMapper.selectPage(new Page<>(page, size), wrapper);
 
-        // ③ 收集所有 categoryId，一次性查出所有分类（解决 N+1 问题）
         Set<Long> categoryIds = productPage.getRecords().stream()
                 .map(Product::getCategoryId)
                 .collect(Collectors.toSet());
@@ -61,7 +58,6 @@ public class ProductServiceImpl implements ProductService {
                 .stream()
                 .collect(Collectors.toMap(Category::getId, Category::getName));
 
-        // ④ 实体 → VO
         List<ProductVO> voList = productPage.getRecords().stream()
                 .map(product -> ProductVO.builder()
                         .id(product.getId())
@@ -78,21 +74,19 @@ public class ProductServiceImpl implements ProductService {
                         .build())
                 .collect(Collectors.toList());
 
-        // ⑤ 组装分页结果
         return PageResult.of(voList, productPage.getTotal(),
                 (int) productPage.getCurrent(), (int) productPage.getSize());
-
     }
 
     @Override
     public ProductVO getProductDetail(Long id) {
         Product product = productMapper.selectById(id);
-        if (product != null) {
+        if (product == null) {
             throw new RuntimeException("商品不存在");
         }
 
         String categoryName = null;
-        if(product.getCategoryId() != null){
+        if (product.getCategoryId() != null) {
             Category category = categoryMapper.selectById(product.getCategoryId());
             categoryName = category != null ? category.getName() : null;
         }
@@ -123,35 +117,34 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(1);
         product.setSales(0);
         productMapper.insert(product);
-
         return product.getId();
     }
 
     @Override
     public void updateProduct(Long id, ProductDTO productDTO) {
-         Product product = productMapper.selectById(id);
-         if (product == null) {
-             throw new RuntimeException("商品不存在");
-         }
-         if(productDTO.getName() != null){
-             product.setName(productDTO.getName());
-         }
-         if(productDTO.getCategoryId() != null){
-             product.setCategoryId(productDTO.getCategoryId());
-         }
-         if(productDTO.getPrice() != null){
-             product.setPrice(productDTO.getPrice());
-         }
-         if(productDTO.getDescription() != null){
-             product.setDescription(productDTO.getDescription());
-         }
-         if(productDTO.getMainImage() != null){
-             product.setMainImage(productDTO.getMainImage());
-         }
-         if(productDTO.getStock() != null){
-             product.setStock(productDTO.getStock());
-         }
-         productMapper.updateById(product);
+        Product product = productMapper.selectById(id);
+        if (product == null) {
+            throw new RuntimeException("商品不存在");
+        }
+        if (productDTO.getName() != null) {
+            product.setName(productDTO.getName());
+        }
+        if (productDTO.getCategoryId() != null) {
+            product.setCategoryId(productDTO.getCategoryId());
+        }
+        if (productDTO.getPrice() != null) {
+            product.setPrice(productDTO.getPrice());
+        }
+        if (productDTO.getDescription() != null) {
+            product.setDescription(productDTO.getDescription());
+        }
+        if (productDTO.getMainImage() != null) {
+            product.setMainImage(productDTO.getMainImage());
+        }
+        if (productDTO.getStock() != null) {
+            product.setStock(productDTO.getStock());
+        }
+        productMapper.updateById(product);
     }
 
     @Override
@@ -162,7 +155,5 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setStatus(status);
         productMapper.updateById(product);
-
-
     }
 }
