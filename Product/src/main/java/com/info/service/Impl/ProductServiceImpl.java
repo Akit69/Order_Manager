@@ -13,6 +13,7 @@ import com.info.mapper.ProductMapper;
 import com.info.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
     private final CategoryMapper categoryMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public PageResult<ProductVO> getProductPage(Integer page, Integer size,
@@ -82,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductVO getProductDetail(Long id) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("商品不存在");
+            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
         }
 
         String categoryName = null;
@@ -117,6 +119,8 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(1);
         product.setSales(0);
         productMapper.insert(product);
+        // 同步初始库存到 Redis
+        redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
         return product.getId();
     }
 
@@ -124,7 +128,7 @@ public class ProductServiceImpl implements ProductService {
     public void updateProduct(Long id, ProductDTO productDTO) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("商品不存在");
+            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
         }
         if (productDTO.getName() != null) {
             product.setName(productDTO.getName());
@@ -145,15 +149,19 @@ public class ProductServiceImpl implements ProductService {
             product.setStock(productDTO.getStock());
         }
         productMapper.updateById(product);
+        // 同步库存到 Redis
+        redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
     }
 
     @Override
     public void updateStatus(Long id, Integer status) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("商品不存在");
+            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
         }
         product.setStatus(status);
         productMapper.updateById(product);
+        // 同步库存到 Redis
+        redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
     }
 }
