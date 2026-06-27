@@ -1,4 +1,4 @@
-package com.info.service.Impl;
+﻿package com.info.service.Impl;
 
 import com.info.entity.CouponTemplate;
 import com.info.service.CouponCalculator;
@@ -9,7 +9,7 @@ public class FullReductionCalculator implements CouponCalculator {
     @Override
     public long calculate(long totalAmount, CouponTemplate template) {
         if (totalAmount < template.getCondition()) {
-            throw new RuntimeException("Order amount does not meet coupon minimum");
+            throw new RuntimeException("订单金额不满足优惠券门槛");
         }
         return template.getDiscount();
     }

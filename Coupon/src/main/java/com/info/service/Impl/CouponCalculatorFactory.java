@@ -1,4 +1,4 @@
-package com.info.service.Impl;
+﻿package com.info.service.Impl;
 
 import com.info.service.CouponCalculator;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class CouponCalculatorFactory {
 
     public CouponCalculator getCalculator(Integer type) {
         CouponCalculator c = calculatorMap.get(type);
-        if (c == null) throw new RuntimeException("Unknown coupon type: " + type);
+        if (c == null) throw new RuntimeException("未知优惠券类型: " + type);
         return c;
     }
 }

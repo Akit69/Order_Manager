@@ -1,4 +1,4 @@
-package com.info.entity;
+﻿package com.info.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -11,8 +11,8 @@ public class CouponTemplate {
     private Long id;
     private String name;
     private Integer type;        // 1=满减 2=折扣
-    private Long condition;      // 门槛(分)
-    private Long discount;       // 满减=减多少(分)  折扣=百分比(80=8折)
+    private Long condition;      // 门槛（分）
+    private Long discount;       // 满减=减多少分  折扣=百分比 80=8折
     private Integer total;
     private Integer received;
     private LocalDateTime startTime;

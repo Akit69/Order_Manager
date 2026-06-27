@@ -1,4 +1,4 @@
-package com.info.aspect;
+﻿package com.info.aspect;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -18,7 +18,7 @@ public class RateLimitAspect {
         RateLimiter limiter = limiters.computeIfAbsent(key,
                 k -> RateLimiter.create(1.0));
         if (!limiter.tryAcquire(1, TimeUnit.SECONDS)) {
-            throw new RuntimeException("System busy, try again later");
+            throw new RuntimeException("系统繁忙，请稍后再试");
         }
         return pjp.proceed();
     }

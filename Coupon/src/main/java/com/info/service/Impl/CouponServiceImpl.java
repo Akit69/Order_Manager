@@ -1,4 +1,4 @@
-package com.info.service.Impl;
+﻿package com.info.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -26,7 +26,7 @@ public class CouponServiceImpl implements CouponService {
     private final UserCouponMapper userCouponMapper;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    // ===== create template (ADMIN) =====
+    // ===== 创建优惠券模板 =====
     @Override
     @Transactional
     public void createTemplate(CouponDTO dto) {
@@ -41,11 +41,11 @@ public class CouponServiceImpl implements CouponService {
         t.setEndTime(dto.getEndTime());
         t.setStatus(1);
         templateMapper.insert(t);
-        // init Redis stock
+        // 初始化 Redis 库存
         redisTemplate.opsForValue().set("coupon:stock:" + t.getId(), dto.getTotal());
     }
 
-    // ===== template list =====
+    // ===== 模板列表 =====
     @Override
     public PageResult<CouponVO> getTemplatePage(Integer page, Integer size) {
         LambdaQueryWrapper<CouponTemplate> w = new LambdaQueryWrapper<>();
@@ -58,7 +58,7 @@ public class CouponServiceImpl implements CouponService {
                         .templateId(t.getId())
                         .name(t.getName())
                         .type(t.getType())
-                        .typeDesc(t.getType() == 1 ? "Full Reduction" : "Discount")
+                        .typeDesc(t.getType() == 1 ? "满减" : "折扣")
                         .condition(t.getCondition())
                         .discount(t.getDiscount())
                         .endTime(t.getEndTime())
@@ -68,29 +68,29 @@ public class CouponServiceImpl implements CouponService {
         return PageResult.of(list, p.getTotal(), (int) p.getCurrent(), (int) p.getSize());
     }
 
-    // ===== receive coupon =====
+    // ===== 领取优惠券 =====
     @Override
     public void receive(Long templateId) {
         Long userId = UserContext.getUserId().longValue();
 
-        // check valid
+        // 校验有效性
         CouponTemplate t = templateMapper.selectById(templateId);
-        if (t == null || t.getStatus() != 1) throw new RuntimeException("Coupon not available");
-        if (LocalDateTime.now().isAfter(t.getEndTime())) throw new RuntimeException("Coupon expired");
+        if (t == null || t.getStatus() != 1) throw new RuntimeException("优惠券不可用");
+        if (LocalDateTime.now().isAfter(t.getEndTime())) throw new RuntimeException("优惠券已过期");
 
-        // one per user (Redis Set)
+        // 一人一券（Redis Set 去重）
         String userKey = "coupon:user:" + userId;
         Boolean exists = redisTemplate.opsForSet().isMember(userKey, templateId.toString());
-        if (Boolean.TRUE.equals(exists)) throw new RuntimeException("Already received this coupon");
+        if (Boolean.TRUE.equals(exists)) throw new RuntimeException("已领取过该优惠券");
 
-        // stock check
+        // 库存校验
         Long remain = redisTemplate.opsForValue().decrement("coupon:stock:" + templateId);
         if (remain < 0) {
             redisTemplate.opsForValue().increment("coupon:stock:" + templateId);
-            throw new RuntimeException("Coupon sold out");
+            throw new RuntimeException("优惠券已抢光");
         }
 
-        // save
+        // 保存记录
         UserCoupon uc = new UserCoupon();
         uc.setUserId(userId);
         uc.setTemplateId(templateId);
@@ -100,7 +100,7 @@ public class CouponServiceImpl implements CouponService {
         redisTemplate.opsForSet().add(userKey, templateId.toString());
     }
 
-    // ===== my coupons =====
+    // ===== 我的优惠券 =====
     @Override
     public List<CouponVO> getMyCoupons() {
         Long userId = UserContext.getUserId().longValue();
@@ -117,11 +117,11 @@ public class CouponServiceImpl implements CouponService {
                     .templateId(uc.getTemplateId())
                     .name(t != null ? t.getName() : "")
                     .type(t != null ? t.getType() : 0)
-                    .typeDesc(t != null && t.getType() == 1 ? "Full Reduction" : "Discount")
+                    .typeDesc(t != null && t.getType() == 1 ? "满减" : "折扣")
                     .condition(t != null ? t.getCondition() : 0L)
                     .discount(t != null ? t.getDiscount() : 0L)
                     .status(uc.getStatus())
-                    .statusDesc("Available")
+                    .statusDesc("可用")
                     .endTime(t != null ? t.getEndTime() : null)
                     .build();
         }).collect(Collectors.toList());

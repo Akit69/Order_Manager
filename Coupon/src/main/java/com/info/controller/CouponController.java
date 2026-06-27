@@ -1,4 +1,4 @@
-package com.info.controller;
+﻿package com.info.controller;
 
 import com.info.entity.DTO.CouponDTO;
 import com.info.entity.PageResult;
@@ -20,7 +20,7 @@ public class CouponController {
     @PostMapping("/template")
     public Result<String> createTemplate(@Valid @RequestBody CouponDTO dto) {
         couponService.createTemplate(dto);
-        return Result.success("Created", null);
+        return Result.success("创建成功", null);
     }
 
     @GetMapping("/template/list")
@@ -33,7 +33,7 @@ public class CouponController {
     @PostMapping("/receive/{templateId}")
     public Result<String> receive(@PathVariable Long templateId) {
         couponService.receive(templateId);
-        return Result.success("Received", null);
+        return Result.success("领取成功", null);
     }
 
     @GetMapping("/my")

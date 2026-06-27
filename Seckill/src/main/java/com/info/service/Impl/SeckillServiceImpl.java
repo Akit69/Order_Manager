@@ -1,4 +1,4 @@
-package com.info.service.Impl;
+﻿package com.info.service.Impl;
 
 import com.info.annotation.RateLimit;
 import com.info.entity.*;
@@ -32,24 +32,24 @@ public class SeckillServiceImpl implements SeckillService {
     public SeckillResultVO seckill(Long activityId) {
         Long userId = UserContext.getUserId().longValue();
 
-        // 1. validate activity
+        // 1. 校验活动
         SeckillActivity activity = activityMapper.selectById(activityId);
         if (activity == null || activity.getStatus() != 1) {
-            throw new RuntimeException("Activity not available");
+            throw new RuntimeException("活动不可用");
         }
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(activity.getStartTime()) || now.isAfter(activity.getEndTime())) {
-            throw new RuntimeException("Activity not in progress");
+            throw new RuntimeException("活动未在进行中");
         }
 
-        // 2. one user one order (Redis Set)
+        // 2. 一人一单（Redis Set 去重）
         String userKey = "seckill:user:" + activityId;
         Boolean exists = redisTemplate.opsForSet().isMember(userKey, userId.toString());
         if (Boolean.TRUE.equals(exists)) {
-            throw new RuntimeException("Already participated");
+            throw new RuntimeException("已参与过该活动");
         }
 
-        // 3. Lua script: check stock + deduct + mark user
+        // 3. Lua 脚本：检查库存 + 扣减 + 标记用户
         String lua = "local stock = redis.call('get', KEYS[1]) " +
                      "if not stock or tonumber(stock) <= 0 then return 0 end " +
                      "redis.call('decr', KEYS[1]) " +
@@ -62,10 +62,10 @@ public class SeckillServiceImpl implements SeckillService {
                 userId.toString());
 
         if (result == null || result == 0) {
-            throw new RuntimeException("Sold out or already participated");
+            throw new RuntimeException("已售罄或已参与");
         }
 
-        // 4. generate order (sync, simplified)
+        // 4. 生成订单（同步简化版）
         String orderNo = "SK" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                        + String.format("%04d", userId % 10000);
 
@@ -83,19 +83,19 @@ public class SeckillServiceImpl implements SeckillService {
         item.setOrderId(order.getId());
         item.setOrderNo(orderNo);
         item.setProductId(activity.getProductId());
-        item.setProductName(product != null ? product.getName() : "Seckill Item");
+        item.setProductName(product != null ? product.getName() : "秒杀商品");
         item.setPrice(activity.getSeckillPrice());
         item.setQuantity(1);
         item.setSubtotal(activity.getSeckillPrice());
         orderItemMapper.insert(item);
 
-        // 5. update activity stock
+        // 5. 更新活动库存
         activity.setSeckillStock(activity.getSeckillStock() - 1);
         activityMapper.updateById(activity);
 
         return SeckillResultVO.builder()
                 .orderNo(orderNo)
-                .message("Seckill success")
+                .message("秒杀成功")
                 .build();
     }
 }
