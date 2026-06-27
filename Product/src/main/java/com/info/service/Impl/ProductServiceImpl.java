@@ -12,8 +12,8 @@ import com.info.mapper.CategoryMapper;
 import com.info.mapper.ProductMapper;
 import com.info.service.ProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -84,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductVO getProductDetail(Long id) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
+            throw new RuntimeException("Product not found");
         }
 
         String categoryName = null;
@@ -119,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(1);
         product.setSales(0);
         productMapper.insert(product);
-        // 同步初始库存到 Redis
+
         redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
         return product.getId();
     }
@@ -128,28 +128,16 @@ public class ProductServiceImpl implements ProductService {
     public void updateProduct(Long id, ProductDTO productDTO) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
+            throw new RuntimeException("Product not found");
         }
-        if (productDTO.getName() != null) {
-            product.setName(productDTO.getName());
-        }
-        if (productDTO.getCategoryId() != null) {
-            product.setCategoryId(productDTO.getCategoryId());
-        }
-        if (productDTO.getPrice() != null) {
-            product.setPrice(productDTO.getPrice());
-        }
-        if (productDTO.getDescription() != null) {
-            product.setDescription(productDTO.getDescription());
-        }
-        if (productDTO.getMainImage() != null) {
-            product.setMainImage(productDTO.getMainImage());
-        }
-        if (productDTO.getStock() != null) {
-            product.setStock(productDTO.getStock());
-        }
+        if (productDTO.getName() != null) product.setName(productDTO.getName());
+        if (productDTO.getCategoryId() != null) product.setCategoryId(productDTO.getCategoryId());
+        if (productDTO.getPrice() != null) product.setPrice(productDTO.getPrice());
+        if (productDTO.getDescription() != null) product.setDescription(productDTO.getDescription());
+        if (productDTO.getMainImage() != null) product.setMainImage(productDTO.getMainImage());
+        if (productDTO.getStock() != null) product.setStock(productDTO.getStock());
         productMapper.updateById(product);
-        // 同步库存到 Redis
+
         redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
     }
 
@@ -157,11 +145,9 @@ public class ProductServiceImpl implements ProductService {
     public void updateStatus(Long id, Integer status) {
         Product product = productMapper.selectById(id);
         if (product == null) {
-            throw new RuntimeException("鍟嗗搧涓嶅瓨鍦?);
+            throw new RuntimeException("Product not found");
         }
         product.setStatus(status);
         productMapper.updateById(product);
-        // 同步库存到 Redis
-        redisTemplate.opsForValue().set("product:stock:" + product.getId(), product.getStock());
     }
 }

@@ -12,6 +12,8 @@
         <module>User</module>
         <module>Product</module>
         <module>Order</module>
+            <module>Coupon</module>
+        <module>Seckill</module>
     </modules>
 
     <properties>
